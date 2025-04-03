@@ -1,23 +1,17 @@
-﻿using Domain.Models;
+﻿using Application.Models;
+using Application.Services.Events;
 using FastEndpoints;
-using Infrastructure.Contexts;
-using Microsoft.EntityFrameworkCore;
 
-namespace Api.Endpoints;
-
-public class GetEventsResponse
-{
-    public List<Event> Events { get; set; } = new();
-}
+namespace Api.Endpoints.Events;
 
 /// <summary>
 /// Represents a request to get all events.
 /// </summary>
 public class GetEventsEndpoint : EndpointWithoutRequest<GetEventsResponse>
 {
-    private readonly CalendarDbContext _context;
+    private readonly IEventService _service;
 
-    public GetEventsEndpoint(CalendarDbContext context) => _context = context;
+    public GetEventsEndpoint(IEventService service) => _service = service;
 
     public override void Configure()
     {
@@ -25,9 +19,14 @@ public class GetEventsEndpoint : EndpointWithoutRequest<GetEventsResponse>
         AllowAnonymous();
     }
 
+    /// <summary>
+    /// Handles the retrieval of all events.
+    /// </summary>
+    /// <param name="ct"></param>
+    /// <returns></returns>
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var events = await _context.Events.ToListAsync(ct);
+        var events = await _service.GetEventsAsync(ct);
         await SendAsync(new GetEventsResponse { Events = events }, cancellation: ct);
     }
 }
