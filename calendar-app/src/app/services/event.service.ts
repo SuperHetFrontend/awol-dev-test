@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
+// TODO: Transfer the models to their own classes
 export interface CalendarEvent {
   id: number;
   name: string;

@@ -12,7 +12,7 @@ import { catchError, EMPTY, tap } from 'rxjs';
   styleUrls: ['./calendar.component.css']
 })
 export class CalendarComponent implements OnInit {
-  days: number[] = [];
+  days: number[] = []; // Represents each day of the active month
   events: CalendarEvent[] = [];
   showNewEventForm = false;
   newEvent: Partial<CalendarEvent> = {};
@@ -58,6 +58,7 @@ export class CalendarComponent implements OnInit {
     this.updateCalendar();
   }
 
+  // Populate events array from api response
   loadEvents(): void {
     this.eventService.getEvents().subscribe(data => {
       // Ensure date strings are converted to Date objects.
@@ -93,81 +94,26 @@ export class CalendarComponent implements OnInit {
     });
   }
 
+  // Controls viewing of new event form
   openNewEventForm(): void {
     this.showNewEventForm = true;
     this.newEvent = {};
   }
 
+  // Adds a new event
   addEvent(): void {
-    let localBegin: Date;
-    let localEnd: Date;
-    
-    if (!this.newEvent.name || !this.newEvent.begin || !this.newEvent.end) {
-      alert('Please fill in required fields');
+    if (!this.processEventDates(this.newEvent)) {
       return;
     }
-
-    // Validate and convert newEvent.begin
-    if (this.newEvent.begin == null) {
-      alert("Please provide Begin value");
-      return;
-    } else if (typeof this.newEvent.begin === 'string') {
-      localBegin = new Date(this.newEvent.begin);
-    } else if (this.newEvent.begin instanceof Date) {
-      localBegin = this.newEvent.begin;
-    } else {
-      throw new Error("Unexpected type for newEvent.begin");
-    }
-
-    // Validate and convert newEvent.end
-    if (this.newEvent.end == null) {
-      alert("Please provide End value");
-      return;
-    } else if (typeof this.newEvent.end === 'string') {
-      localEnd = new Date(this.newEvent.end);
-    } else if (this.newEvent.end instanceof Date) {
-      localEnd = this.newEvent.end;
-    } else {
-      throw new Error("Unexpected type for newEvent.end");
-    }
-
-    // Convert local dates to UTC dates
-    const utcBegin = new Date(
-      localBegin.getTime() - localBegin.getTimezoneOffset() * 60000
-    );
-    const utcEnd = new Date(
-      localEnd.getTime() - localEnd.getTimezoneOffset() * 60000
-    );
-
-    // Assign the converted UTC dates back to newEvent
-    this.newEvent.begin = utcBegin;
-    this.newEvent.end = utcEnd;
 
     this.eventService.createEvent(this.newEvent).pipe(
       tap(() => {
-        // Runs on successful response.
         this.loadEvents();
         this.showNewEventForm = false;
       }),
       catchError(error => {
-        // Extract and display FastEndpoints GeneralError
-        let errorMessage = 'An unexpected error occurred';
-        if (
-          error.error &&
-          error.error.errors &&
-          error.error.errors.generalErrors &&
-          Array.isArray(error.error.errors.generalErrors)
-        ) {
-          errorMessage = error.error.errors.generalErrors.join(', ');
-        } else if (error.error && typeof error.error === 'string') {
-          errorMessage = error.error;
-        } else if (error.error && error.error.message) {
-          errorMessage = error.error.message;
-        } else {
-          errorMessage = JSON.stringify(error.error);
-        }
-        alert(errorMessage);
-        return EMPTY;        
+        alert(this.extractErrorMessage(error));
+        return EMPTY;
       })
     ).subscribe();
   }
@@ -178,92 +124,105 @@ export class CalendarComponent implements OnInit {
     this.editingEvent = { ...event };
   }
 
-  // Update event
+  // Updates an existing event
   updateEvent(): void {
     if (!this.editingEvent) return;
 
-    let localBegin: Date;
-    let localEnd: Date;
-
-    if (!this.editingEvent.name || !this.editingEvent.begin || !this.editingEvent.end) {
-      alert('Please fill in required fields');
+    if (!this.processEventDates(this.editingEvent)) {
       return;
     }
-
-    // Validate and convert editingEvent.begin
-    if (this.editingEvent.begin == null) {
-      alert("Please provide Begin value");
-      return;
-    } else if (typeof this.editingEvent.begin === 'string') {
-      localBegin = new Date(this.editingEvent.begin);
-    } else if (this.editingEvent.begin instanceof Date) {
-      localBegin = this.editingEvent.begin;
-    } else {
-      throw new Error("Unexpected type for editingEvent.begin");
-    }
-
-    // Validate and convert editingEvent.end
-    if (this.editingEvent.end == null) {
-      alert("Please provide End value");
-      return;
-    } else if (typeof this.editingEvent.end === 'string') {
-      localEnd = new Date(this.editingEvent.end);
-    } else if (this.editingEvent.end instanceof Date) {
-      localEnd = this.editingEvent.end;
-    } else {
-      throw new Error("Unexpected type for editingEvent.end");
-    }
-
-    // Convert local dates to UTC dates
-    const utcBegin = new Date(
-      localBegin.getTime() - localBegin.getTimezoneOffset() * 60000
-    );
-    const utcEnd = new Date(
-      localEnd.getTime() - localEnd.getTimezoneOffset() * 60000
-    );
-
-    // Assign the converted UTC dates back to editingEvent
-    this.editingEvent.begin = utcBegin;
-    this.editingEvent.end = utcEnd;    
 
     this.eventService.updateEvent(this.editingEvent).pipe(
       tap(() => {
-        // Runs on successful response.
         this.loadEvents();
         this.editingEvent = null;
       }),
       catchError(error => {
-        // Extract and display FastEndpoints GeneralError
-        let errorMessage = 'An unexpected error occurred';
-        if (
-          error.error &&
-          error.error.errors &&
-          error.error.errors.generalErrors &&
-          Array.isArray(error.error.errors.generalErrors)
-        ) {
-          errorMessage = error.error.errors.generalErrors.join(', ');
-        } else if (error.error && typeof error.error === 'string') {
-          errorMessage = error.error;
-        } else if (error.error && error.error.message) {
-          errorMessage = error.error.message;
-        } else {
-          errorMessage = JSON.stringify(error.error);
-        }
-        alert(errorMessage);
-        return EMPTY;        
+        alert(this.extractErrorMessage(error));
+        return EMPTY;
       })
-    ).subscribe();    
+    ).subscribe();
   }
 
+  // Allows edit to be cancelled
   cancelEdit(): void {
     this.editingEvent = null;
   }  
 
+  // Deletes the given event
   deleteEvent(eventId: number): void {
     if (confirm("Are you sure you want to delete this event?")) {
       this.eventService.deleteEvent(eventId).subscribe(() => {
         this.loadEvents();
       });
     }
+  }
+
+  // Helper method to validate and convert begin and end dates
+  private processEventDates(event: Partial<CalendarEvent>): boolean {
+    let localBegin: Date;
+    let localEnd: Date;
+
+    // Check for required fields
+    if (
+      !event.name ||
+      !event.begin ||
+      Object.keys(event.begin).length === 0 ||
+      !event.end ||
+      Object.keys(event.end).length === 0
+    ) {
+      alert('Please fill in required fields');
+      return false;
+    }
+
+    // Process begin date
+    if (typeof event.begin === 'string') {
+      localBegin = new Date(event.begin);
+    } else if (event.begin instanceof Date) {
+      localBegin = event.begin;
+    } else {
+      alert("Unexpected type for event.begin");
+      return false;
+    }
+
+    // Process end date
+    if (typeof event.end === 'string') {
+      localEnd = new Date(event.end);
+    } else if (event.end instanceof Date) {
+      localEnd = event.end;
+    } else {
+      alert("Unexpected type for event.end");
+      return false;
+    }
+
+    // Convert local dates to UTC dates
+    event.begin = new Date(
+      localBegin.getTime() - localBegin.getTimezoneOffset() * 60000
+    );
+    event.end = new Date(
+      localEnd.getTime() - localEnd.getTimezoneOffset() * 60000
+    );
+
+    return true;
+  }
+
+  // Helper method to extract FastEndpoint GeneralError messages from the error response
+  private extractErrorMessage(error: any): string {
+    let errorMessage = 'An unexpected error occurred';
+    if (
+      error.error &&
+      error.error.errors &&
+      error.error.errors.generalErrors &&
+      Array.isArray(error.error.errors.generalErrors)
+    ) {
+      errorMessage = error.error.errors.generalErrors.join(', ');
+    } else if (error.error && typeof error.error === 'string') {
+      errorMessage = error.error;
+    } else if (error.error && error.error.message) {
+      errorMessage = error.error.message;
+    } else {
+      errorMessage = JSON.stringify(error.error);
+    }
+    return errorMessage;
   }
 }
