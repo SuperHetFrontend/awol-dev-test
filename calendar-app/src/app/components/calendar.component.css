@@ -29,13 +29,3 @@ button {
   margin-top: 5px;
   margin-right: 5px;
 }
-
-form label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-form input {
-  margin-bottom: 10px;
-  display: block;
-}

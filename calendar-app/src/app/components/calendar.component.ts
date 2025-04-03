@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EventService, CalendarEvent } from '../services/event.service';
+import { catchError, EMPTY, tap } from 'rxjs';
 
 @Component({
   selector: 'app-calendar',
@@ -100,6 +101,7 @@ export class CalendarComponent implements OnInit {
   addEvent(): void {
     let localBegin: Date;
     let localEnd: Date;
+    
     if (!this.newEvent.name || !this.newEvent.begin || !this.newEvent.end) {
       alert('Please fill in required fields');
       return;
@@ -140,11 +142,34 @@ export class CalendarComponent implements OnInit {
     // Assign the converted UTC dates back to newEvent
     this.newEvent.begin = utcBegin;
     this.newEvent.end = utcEnd;
-  
-    this.eventService.createEvent(this.newEvent).subscribe(() => {
-      this.loadEvents();
-      this.showNewEventForm = false;
-    });
+
+    this.eventService.createEvent(this.newEvent).pipe(
+      tap(() => {
+        // Runs on successful response.
+        this.loadEvents();
+        this.showNewEventForm = false;
+      }),
+      catchError(error => {
+        // Extract and display FastEndpoints GeneralError
+        let errorMessage = 'An unexpected error occurred';
+        if (
+          error.error &&
+          error.error.errors &&
+          error.error.errors.generalErrors &&
+          Array.isArray(error.error.errors.generalErrors)
+        ) {
+          errorMessage = error.error.errors.generalErrors.join(', ');
+        } else if (error.error && typeof error.error === 'string') {
+          errorMessage = error.error;
+        } else if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        } else {
+          errorMessage = JSON.stringify(error.error);
+        }
+        alert(errorMessage);
+        return EMPTY;        
+      })
+    ).subscribe();
   }
 
   // Open the edit form with the selected event details.
@@ -201,10 +226,33 @@ export class CalendarComponent implements OnInit {
     this.editingEvent.begin = utcBegin;
     this.editingEvent.end = utcEnd;    
 
-    this.eventService.updateEvent(this.editingEvent).subscribe(() => {
-      this.loadEvents();
-      this.editingEvent = null; // Close the edit form
-    });
+    this.eventService.updateEvent(this.editingEvent).pipe(
+      tap(() => {
+        // Runs on successful response.
+        this.loadEvents();
+        this.editingEvent = null;
+      }),
+      catchError(error => {
+        // Extract and display FastEndpoints GeneralError
+        let errorMessage = 'An unexpected error occurred';
+        if (
+          error.error &&
+          error.error.errors &&
+          error.error.errors.generalErrors &&
+          Array.isArray(error.error.errors.generalErrors)
+        ) {
+          errorMessage = error.error.errors.generalErrors.join(', ');
+        } else if (error.error && typeof error.error === 'string') {
+          errorMessage = error.error;
+        } else if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        } else {
+          errorMessage = JSON.stringify(error.error);
+        }
+        alert(errorMessage);
+        return EMPTY;        
+      })
+    ).subscribe();    
   }
 
   cancelEdit(): void {
