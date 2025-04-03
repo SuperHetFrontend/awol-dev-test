@@ -95,13 +95,48 @@ export class CalendarComponent implements OnInit {
   }
 
   addEvent(): void {
+    let localBegin: Date;
+    let localEnd: Date;
     if (!this.newEvent.name || !this.newEvent.begin || !this.newEvent.end) {
       alert('Please fill in required fields');
       return;
     }
-    // Convert date string to Date object if necessary.
-    this.newEvent.begin = new Date(this.newEvent.begin as unknown as string);
-    this.newEvent.end = new Date(this.newEvent.end as unknown as string);
+
+    // Validate and convert newEvent.begin
+    if (this.newEvent.begin == null) {
+      alert("Please provide Begin value");
+      return;
+    } else if (typeof this.newEvent.begin === 'string') {
+      localBegin = new Date(this.newEvent.begin);
+    } else if (this.newEvent.begin instanceof Date) {
+      localBegin = this.newEvent.begin;
+    } else {
+      throw new Error("Unexpected type for newEvent.begin");
+    }
+
+    // Validate and convert newEvent.end
+    if (this.newEvent.end == null) {
+      alert("Please provide End value");
+      return;
+    } else if (typeof this.newEvent.end === 'string') {
+      localEnd = new Date(this.newEvent.end);
+    } else if (this.newEvent.end instanceof Date) {
+      localEnd = this.newEvent.end;
+    } else {
+      throw new Error("Unexpected type for newEvent.end");
+    }
+
+    // Convert local dates to UTC dates
+    const utcBegin = new Date(
+      localBegin.getTime() - localBegin.getTimezoneOffset() * 60000
+    );
+    const utcEnd = new Date(
+      localEnd.getTime() - localEnd.getTimezoneOffset() * 60000
+    );
+
+    // Assign the converted UTC dates back to newEvent
+    this.newEvent.begin = utcBegin;
+    this.newEvent.end = utcEnd;
 
     this.eventService.createEvent(this.newEvent).subscribe(() => {
       this.loadEvents();
