@@ -8,11 +8,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
+// Add services to the container.
 builder.Services.AddFastEndpoints();
 builder.Services.AddDbContext<CalendarDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add services to the container.
+// Basic blanket implementation of cors. Consider using a more restrictive policy in production toapply approved domains in WithOrigins method.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+});
+
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -36,6 +43,7 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate();
 }
 
+app.UseCors("AllowAll");
 app.UseFastEndpoints();
 
 app.Run();
