@@ -57,7 +57,7 @@ export class CalendarComponent implements OnInit {
   loadEvents(): void {
     this.eventService.getEvents().subscribe(data => {
       // Ensure date strings are converted to Date objects.
-      this.events = data.map(e => ({
+      this.events = data.events.map(e => ({
         ...e,
         begin: new Date(e.begin),
         end: new Date(e.end)

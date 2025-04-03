@@ -10,6 +10,10 @@ export interface CalendarEvent {
   end: Date;
 }
 
+interface EventsResponse {
+  events: CalendarEvent[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -18,8 +22,8 @@ export class EventService {
 
   constructor(private http: HttpClient) {}
 
-  getEvents(): Observable<CalendarEvent[]> {
-    return this.http.get<CalendarEvent[]>(this.apiUrl);
+  getEvents(): Observable<EventsResponse> {
+    return this.http.get<EventsResponse>(this.apiUrl);
   }
 
   createEvent(event: Partial<CalendarEvent>): Observable<CalendarEvent> {
