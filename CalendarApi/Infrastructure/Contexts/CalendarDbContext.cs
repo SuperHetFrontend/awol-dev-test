@@ -21,5 +21,5 @@ public class CalendarDbContext : DbContext
         );
     }
 
-    public DbSet<Event> Events => Set<Event>();
+    public virtual DbSet<Event> Events => Set<Event>();
 }

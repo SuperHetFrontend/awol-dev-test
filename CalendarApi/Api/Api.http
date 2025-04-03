@@ -8,14 +8,14 @@ Accept: application/json
 ### Create a new event
 POST {{Api_HostAddress}}/api/events
 Content-Type: application/json
-  {
-    "name": "New event",
-    "description": "This is a new event",
-    "begin": "2025-04-29T10:00:00",
-    "end": "2025-04-29T12:00:00"
-  }
+{
+  "name": "New event",
+  "description": "This is a new event",
+  "begin": "2025-04-29T10:00:00",
+  "end": "2025-04-29T12:00:00"
+}
 
-  ### Update an event
+### Update an event
 PUT {{Api_HostAddress}}/api/events/1
 Content-Type: application/json
 {  
