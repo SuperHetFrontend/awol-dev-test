@@ -33,7 +33,14 @@ public class EventService : IEventService
             throw new ArgumentException("Start time must be before end time");
         }
 
+        // Check for overlapping events
+        var overlappingEvent = await _context.Events
+            .FirstOrDefaultAsync(e => e.Begin < req.End && e.End > req.Begin, ct);
 
+        if (overlappingEvent != null)
+        {
+            throw new InvalidOperationException("The event conflicts with an existing event. Please choose a different time.");
+        }
 
         var calendarEvent = new Event
         {
@@ -71,7 +78,15 @@ public class EventService : IEventService
             throw new ArgumentException("Start time must be before end time");
         }
 
+        // Check for overlapping events, excluding the current event being updated
+        var overlappingEvent = await _context.Events
+            .Where(e => e.Id != req.Id)
+            .FirstOrDefaultAsync(e => e.Begin < req.End && e.End > req.Begin, ct);
 
+        if (overlappingEvent != null)
+        {
+            throw new InvalidOperationException("The event conflicts with an existing event. Please choose a different time.");
+        }
 
         calendarEvent.Name = req.Name;
         calendarEvent.Description = req.Description;
