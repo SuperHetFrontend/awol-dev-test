@@ -13,11 +13,13 @@
       <div *ngFor="let event of getEventsForDay(day)">
         {{ event.name }} ({{ event.begin | date: 'shortTime' }})
         <button (click)="deleteEvent(event.id)">Delete</button>
+        <button (click)="openEditEventForm(event)">Edit</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Ne event form: appears on Add Event button click -->
 <button (click)="openNewEventForm()">Add Event</button>
 <div *ngIf="showNewEventForm">
   <h2>New Event</h2>
@@ -39,5 +41,30 @@
       <input type="datetime-local" [(ngModel)]="newEvent.end" name="end" required>
     </label>
     <button type="submit">Add Event</button>
+  </form>
+</div>
+
+<!-- Edit form: appears on edit button click -->
+<div *ngIf="editingEvent">
+  <h2>Edit Event</h2>
+  <form (ngSubmit)="updateEvent()">
+    <label>
+      Name:
+      <input type="text" [(ngModel)]="editingEvent.name" name="editTitle" required>
+    </label>
+    <label>
+      Description:
+      <input type="text" [(ngModel)]="editingEvent.description" name="editDescription">
+    </label>
+    <label>
+      Begin Date & Time:
+      <input type="datetime-local" [(ngModel)]="editingEvent.begin" name="editBegin" required>
+    </label>
+    <label>
+      End Date & Time:
+      <input type="datetime-local" [(ngModel)]="editingEvent.end" name="editEnd" required>
+    </label>
+    <button type="submit">Update Event</button>
+    <button type="button" (click)="cancelEdit()">Cancel</button>
   </form>
 </div>

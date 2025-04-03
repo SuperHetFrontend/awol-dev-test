@@ -19,6 +19,9 @@ export class CalendarComponent implements OnInit {
   // The currentDate controls the month/year displayed.
   currentDate: Date = new Date();
 
+  // Holds an event being edited
+  editingEvent: CalendarEvent | null = null;
+
   constructor(private eventService: EventService) {}
 
   ngOnInit(): void {
@@ -137,12 +140,76 @@ export class CalendarComponent implements OnInit {
     // Assign the converted UTC dates back to newEvent
     this.newEvent.begin = utcBegin;
     this.newEvent.end = utcEnd;
-
+  
     this.eventService.createEvent(this.newEvent).subscribe(() => {
       this.loadEvents();
       this.showNewEventForm = false;
     });
   }
+
+  // Open the edit form with the selected event details.
+  openEditEventForm(event: CalendarEvent): void {
+    // Create a copy to avoid modifying the event directly
+    this.editingEvent = { ...event };
+  }
+
+  // Update event
+  updateEvent(): void {
+    if (!this.editingEvent) return;
+
+    let localBegin: Date;
+    let localEnd: Date;
+
+    if (!this.editingEvent.name || !this.editingEvent.begin || !this.editingEvent.end) {
+      alert('Please fill in required fields');
+      return;
+    }
+
+    // Validate and convert editingEvent.begin
+    if (this.editingEvent.begin == null) {
+      alert("Please provide Begin value");
+      return;
+    } else if (typeof this.editingEvent.begin === 'string') {
+      localBegin = new Date(this.editingEvent.begin);
+    } else if (this.editingEvent.begin instanceof Date) {
+      localBegin = this.editingEvent.begin;
+    } else {
+      throw new Error("Unexpected type for editingEvent.begin");
+    }
+
+    // Validate and convert editingEvent.end
+    if (this.editingEvent.end == null) {
+      alert("Please provide End value");
+      return;
+    } else if (typeof this.editingEvent.end === 'string') {
+      localEnd = new Date(this.editingEvent.end);
+    } else if (this.editingEvent.end instanceof Date) {
+      localEnd = this.editingEvent.end;
+    } else {
+      throw new Error("Unexpected type for editingEvent.end");
+    }
+
+    // Convert local dates to UTC dates
+    const utcBegin = new Date(
+      localBegin.getTime() - localBegin.getTimezoneOffset() * 60000
+    );
+    const utcEnd = new Date(
+      localEnd.getTime() - localEnd.getTimezoneOffset() * 60000
+    );
+
+    // Assign the converted UTC dates back to editingEvent
+    this.editingEvent.begin = utcBegin;
+    this.editingEvent.end = utcEnd;    
+
+    this.eventService.updateEvent(this.editingEvent).subscribe(() => {
+      this.loadEvents();
+      this.editingEvent = null; // Close the edit form
+    });
+  }
+
+  cancelEdit(): void {
+    this.editingEvent = null;
+  }  
 
   deleteEvent(eventId: number): void {
     if (confirm("Are you sure you want to delete this event?")) {
