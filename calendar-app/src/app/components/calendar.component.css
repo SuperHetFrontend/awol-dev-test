@@ -1,0 +1,30 @@
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.day {
+  border: 1px solid #ccc;
+  padding: 5px;
+  min-height: 80px;
+}
+
+.has-event {
+  background-color: #e0ffe0;
+}
+
+.date {
+  font-weight: bold;
+}
+
+button {
+  margin-top: 5px;
+}

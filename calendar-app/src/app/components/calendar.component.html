@@ -1,0 +1,43 @@
+<h1>Monthly Calendar</h1>
+
+<div class="calendar-header">
+  <button (click)="prevMonth()">Previous</button>
+  <span>{{ currentDate | date: 'MMMM yyyy' }}</span>
+  <button (click)="nextMonth()">Next</button>
+</div>
+
+<div class="calendar">
+  <div class="day" *ngFor="let day of days" [class.has-event]="hasEvent(day)">
+    <div class="date">{{ day }}</div>
+    <div class="events" *ngIf="hasEvent(day)">
+      <div *ngFor="let event of getEventsForDay(day)">
+        {{ event.name }} ({{ event.begin | date: 'shortTime' }})
+        <button (click)="deleteEvent(event.id)">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button (click)="openNewEventForm()">Add Event</button>
+<div *ngIf="showNewEventForm">
+  <h2>New Event</h2>
+  <form (ngSubmit)="addEvent()">
+    <label>
+      Name:
+      <input type="text" [(ngModel)]="newEvent.name" name="name" required>
+    </label>
+    <label>
+      Description:
+      <input type="text" [(ngModel)]="newEvent.description" name="description">
+    </label>
+    <label>
+      Begin Date & Time:
+      <input type="datetime-local" [(ngModel)]="newEvent.begin" name="begin" required>
+    </label>
+    <label>
+      End Date & Time:
+      <input type="datetime-local" [(ngModel)]="newEvent.end" name="end" required>
+    </label>
+    <button type="submit">Add Event</button>
+  </form>
+</div>
