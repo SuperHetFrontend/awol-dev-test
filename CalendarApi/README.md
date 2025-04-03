@@ -26,7 +26,6 @@ This solution is a Calendar Event Management System built with .NET 8.0 and C# 1
 
 1. Clone the repository:
 - git clone https://github.com/SuperHetFrontend/awol-dev-test.git
-- cd calendar-event-management
 
 2. Restore the dependencies:
 - dotnet restore
